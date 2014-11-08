@@ -3,70 +3,151 @@ package cz.vutbr.fit.mogger;
 import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.FrameLayout;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Random;
+import static cz.vutbr.fit.mogger.Constants.CHECK;
+import static cz.vutbr.fit.mogger.Constants.SAVE;
 
 
-public class MoveTriggerActivity extends Activity implements SensorEventListener {
-    private SensorManager senSensorManager;
-    private Sensor senAccelerometer;
-    private long lastUpdate = 0;
+public class MoveTriggerActivity extends Activity implements OnClickListener {
 
-    /**
-     * Called when the activity is first created.
-     */
+    TextView textView;
+    Button button1;
+    Button button2;
+    SensorManager sensorManager;
+    Sensor accelerometer;
+    Sounds sounds;
+
+    Listener fastestListener;
+
+    // prace s gesty
+    Gesture gesture;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        senAccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    }
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        Sensor mySensor = sensorEvent.sensor;
+        fastestListener = new Listener(this);
+        sensorManager.registerListener(fastestListener, accelerometer,SensorManager.SENSOR_DELAY_FASTEST);
 
-        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            long curTime = System.currentTimeMillis();
-            if ((curTime - lastUpdate) > 100) {
-                lastUpdate = curTime;
+        sounds = new Sounds();
 
-                float x = sensorEvent.values[0];
-                float y = sensorEvent.values[1];
-                float z = sensorEvent.values[2];
+        gesture = new Gesture();
 
-                Log.v("1", x + ", " + y + ", " + z);
-            }
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
+        // GUI kravinky
+        textView = (TextView) findViewById(R.id.text_view);
+        textView.setText("Mogger v 1.1");
+        button1 = (Button) findViewById(R.id.button1);
+        button1.setOnClickListener(this);
+        button2 = (Button) findViewById(R.id.button2);
+        button2.setOnClickListener(this);
+        // stavy pro buttony
+        button1.setTag(1);
+        button2.setTag(1);
     }
 
     protected void onResume() {
         super.onResume();
-        senSensorManager.registerListener(this, senAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+        sensorManager.registerListener(fastestListener, accelerometer,
+                SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     protected void onPause() {
         super.onPause();
-        senSensorManager.unregisterListener(this);
+
+        sensorManager.unregisterListener(fastestListener);
     }
 
+    // zachyceni kliku na buttony a zavolani jejich akci
+    @Override
+    public void onClick(View v) {
+
+        final int id = v.getId();
+        int status = 0;
+
+        switch (id) {
+            // kontrola s ulozenym gestem
+            case R.id.button1:
+                status = (Integer) button1.getTag();
+
+                if (status == 1) {
+                    button2.setEnabled(false);
+                    fastestListener.startRecording();
+                    button1.setTag(2);
+                    this.button1.setText("Stop");
+                    textView.setText("Working...");
+                }
+                else {
+                    fastestListener.stopRecording();
+                    button1.setTag(1);
+                    this.button1.setText("Start");
+                    textView.setText("Mogger v 1.0");
+                    button2.setEnabled(true);
+                }
+                break;
+
+            // proces ulozeni novehogesta
+            case R.id.button2:
+
+                status = (Integer) button2.getTag();
+
+                if (status == 1) {
+                    button2.setTag(2);
+                    button1.setEnabled(false);
+                    textView.setText("Make gesture after beep.");
+                    this.button2.setText("Stop");
+
+                    // promaze data stareho ulozeneho gesta
+                    gesture.clear();
+
+                    // zpozdeni 2 sec pred samotnym nahravanim gesta
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // zvukova singalizace
+                            sounds.PlayTone();
+                            textView.setText("Saving ...");
+
+                            // ulozeni gesta
+                            fastestListener.startRecording();
+                        }
+                    }, 2000);
+                }
+                else {
+                    // vypni akcelerometr
+                    fastestListener.stopRecording();
+                    button2.setTag(1);
+                    textView.setText("New gesture saved.");
+                    this.button2.setText("Save");
+                    button1.setEnabled(true);
+                }
+
+                break;
+        }
+
+    }
+
+    public int mogger_action() {
+
+        int status = (Integer) button1.getTag();
+
+        // porovnani gest
+        if (status == 2) {
+            return CHECK;
+        }
+        // ulozeni noveho gesta
+        return SAVE;
+
+    }
 }
