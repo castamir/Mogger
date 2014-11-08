@@ -11,8 +11,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import static cz.vutbr.fit.mogger.Constants.CHECK;
-import static cz.vutbr.fit.mogger.Constants.SAVE;
+import static cz.vutbr.fit.mogger.Constants.*;
 
 
 public class MoveTriggerActivity extends Activity implements OnClickListener {
@@ -42,11 +41,11 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
 
         sounds = new Sounds();
 
-        gesture = new Gesture();
+        gesture = new Gesture(this);
 
         // GUI kravinky
         textView = (TextView) findViewById(R.id.text_view);
-        textView.setText("Mogger v 1.1");
+        textView.setText("Mogger v 1.2");
         button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(this);
         button2 = (Button) findViewById(R.id.button2);
@@ -92,7 +91,7 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
                     fastestListener.stopRecording();
                     button1.setTag(1);
                     this.button1.setText("Start");
-                    textView.setText("Mogger v 1.0");
+                    textView.setText("Mogger v 1.2");
                     button2.setEnabled(true);
                 }
                 break;
@@ -105,7 +104,7 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
                 if (status == 1) {
                     button2.setTag(2);
                     button1.setEnabled(false);
-                    textView.setText("Make gesture after beep.");
+                    textView.setText("Make gesture! First beep - start recording. Second beep - stop recording.");
                     this.button2.setText("Stop");
 
                     // promaze data stareho ulozeneho gesta
@@ -115,22 +114,10 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            // zvukova singalizace
-                            sounds.PlayTone();
-                            textView.setText("Saving ...");
-
                             // ulozeni gesta
                             fastestListener.startRecording();
                         }
-                    }, 2000);
-                }
-                else {
-                    // vypni akcelerometr
-                    fastestListener.stopRecording();
-                    button2.setTag(1);
-                    textView.setText("New gesture saved.");
-                    this.button2.setText("Save");
-                    button1.setEnabled(true);
+                    }, 1000);
                 }
 
                 break;
@@ -140,12 +127,14 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
 
     public int mogger_action() {
 
-        int status = (Integer) button1.getTag();
+        int status1 = (Integer) button1.getTag();
+        int status2 = (Integer) button1.getTag();
 
         // porovnani gest
-        if (status == 2) {
+        if (status1 == 2) {
             return CHECK;
         }
+
         // ulozeni noveho gesta
         return SAVE;
 

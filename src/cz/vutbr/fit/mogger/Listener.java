@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import static cz.vutbr.fit.mogger.Constants.CHECK;
 import static cz.vutbr.fit.mogger.Constants.SAMPLING_RATE;
+import static cz.vutbr.fit.mogger.Constants.START_SAVING;
 
 public class Listener implements SensorEventListener {
 
@@ -74,7 +75,6 @@ public class Listener implements SensorEventListener {
                 }
                 // ulozeni gesta
                 else {
-                    System.out.println("ulozeno");
                     mogger.gesture.save(x, y, z);
                 }
             }
