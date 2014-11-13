@@ -31,6 +31,8 @@ public class Gesture {
     // gesto ulozeni 2D pole
     public int[][] gesture;
 
+    private int treshold;
+
     DTW dtw;
 
     private MoveTriggerActivity mogger;
@@ -56,6 +58,8 @@ public class Gesture {
         sounds = new Sounds();
 
         this.mogger = mogger;
+
+        treshold = 1;
 
     }
 
@@ -84,7 +88,8 @@ public class Gesture {
             }
             else {
                 // uzivatel zacal vytvaret gesto
-                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) > 3) {
+                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) > 2) {
+                    clear();
                     sounds.PlayTone();
                     mogger.textView.setText("Recording ...");
                     ref_coord_x.add(x);
@@ -102,14 +107,15 @@ public class Gesture {
             ref_coord_z.add(z);
 
             // mame alespon 8 vektoru, zacneme overovat, zda uzivatel neukoncil gesto
-            if (ref_coord_x.size() > 8) {
-                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) < 4) {
+            if (ref_coord_x.size() >= 8) {
+                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) < 3) {
                     sounds.PlayTone();
                     mogger.fastestListener.stopRecording();
                     mogger.button2.setText("Save");
                     mogger.button2.setTag(1);
                     mogger.textView.setText("New gesture saved.");
                     mogger.button1.setEnabled(true);
+                    treshold = calculate_treshold();
                 }
             }
             prev_x = x;
@@ -140,7 +146,7 @@ public class Gesture {
             int result = dtw.dtw_check(acc_gesture, gesture);
 
             // gesto zachyceno, promazeme zachycene gesto (kvuli mnohonasobnemu zachyceni s dalsimi vzorky)
-            if (result < 60) {
+            if (result < treshold) {
                 coord_x.clear();
                 coord_y.clear();
                 coord_z.clear();
@@ -176,6 +182,36 @@ public class Gesture {
         ref_coord_x.clear();
         ref_coord_y.clear();
         ref_coord_z.clear();
+    }
+
+    // promaze aktualne posbirana data
+    public void clear_saved_data() {
+        coord_x.clear();
+        coord_y.clear();
+        coord_z.clear();
+    }
+
+    // spocita prah pro rozpoznani prislusneho gesta podle jeho slozitosti
+    public int calculate_treshold() {
+        int size = ref_coord_x.size();
+        int sum = 0;
+
+        int strange_const = 4;
+
+        for (int i = 0; i < size; i++) {
+            sum += abs(ref_coord_x.get(i)) + abs(ref_coord_y.get(i)) + abs(ref_coord_z.get(i));
+        }
+
+        if (size > 20) {
+            strange_const = 5;
+        }
+        else if (size > 30) {
+            strange_const = 6;
+        }
+
+        //System.out.println("delka: " + size + ", suma: " + sum + ", tresh: " + (sum/size) * strange_const);
+
+        return (sum/size) * strange_const;
     }
 
 }

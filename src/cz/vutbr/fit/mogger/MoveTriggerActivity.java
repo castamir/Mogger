@@ -45,7 +45,7 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
 
         // GUI kravinky
         textView = (TextView) findViewById(R.id.text_view);
-        textView.setText("Mogger v 1.2");
+        textView.setText("Mogger v 1.3");
         button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(this);
         button2 = (Button) findViewById(R.id.button2);

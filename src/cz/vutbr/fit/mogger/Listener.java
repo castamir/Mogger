@@ -6,9 +6,8 @@ import android.hardware.SensorEventListener;
 
 import java.util.ArrayList;
 
-import static cz.vutbr.fit.mogger.Constants.CHECK;
-import static cz.vutbr.fit.mogger.Constants.SAMPLING_RATE;
-import static cz.vutbr.fit.mogger.Constants.START_SAVING;
+import static cz.vutbr.fit.mogger.Constants.*;
+import static java.lang.Math.abs;
 
 public class Listener implements SensorEventListener {
 
@@ -17,6 +16,11 @@ public class Listener implements SensorEventListener {
 
     private long lastUpdate = 0;
     private MoveTriggerActivity mogger;
+
+    private int check_gesture;
+    private int prev_x, prev_y, prev_z;
+
+    private boolean result;
 
     // vzorce pro kontrolu podobnosti sekvenci vektoru
     public DTW dtw;
@@ -31,6 +35,10 @@ public class Listener implements SensorEventListener {
         this.mogger = mogger;
         dtw = new DTW();
         sounds = new Sounds();
+
+        check_gesture = CHECK_GESTURE_STOP;
+        prev_x = 100;
+        result = false;
     }
 
     public void startRecording() {
@@ -66,11 +74,42 @@ public class Listener implements SensorEventListener {
 
                 // porovnani gest
                 if (state == CHECK) {
-                    mogger.gesture.add_coords(x, y, z);
-                    boolean result = mogger.gesture.check();
+                    // kontrola, zda se provadi gesto
+                    // prvni inicializace
+                    if (prev_x == 100) {
+                        prev_x = x;
+                        prev_y = y;
+                        prev_z = z;
+                    }
+                    else {
+                        // stav kontrola neaktivni
+                        if (check_gesture == CHECK_GESTURE_START) {
+                            if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) < 2) {
+                                check_gesture = CHECK_GESTURE_STOP;
+                            }
+                        }
+                        else if (check_gesture == CHECK_GESTURE_STOP) {
+                            if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) > 2) {
+                                // prepneme stav
+                                check_gesture = CHECK_GESTURE_START;
+                                // vyresetujeme zaznamenane udaje
+                                mogger.gesture.clear_saved_data();
+                            }
+                        }
+                        prev_x = x;
+                        prev_y = y;
+                        prev_z = z;
+                    }
 
-                    if (result) {
-                        sounds.PlayTone();
+                    // gesto se provadi
+                    if (check_gesture == CHECK_GESTURE_START) {
+                        mogger.gesture.add_coords(x, y, z);
+                        result = mogger.gesture.check();
+                        if (result) {
+                            mogger.gesture.clear_saved_data();
+                            sounds.PlayTone();
+                            result = false;
+                        }
                     }
                 }
                 // ulozeni gesta
