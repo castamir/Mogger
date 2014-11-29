@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
+import cz.vutbr.fit.mogger.gesture.GestureManager;
 
 import static cz.vutbr.fit.mogger.Constants.CHECK;
 import static cz.vutbr.fit.mogger.Constants.SAVE;
@@ -25,6 +26,7 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
     Sounds sounds;
     FileStorage storage;
 
+    GestureManager gestureManager;
     Listener fastestListener;
 
     // prace s gesty
@@ -38,12 +40,13 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        fastestListener = new Listener(this);
+        fastestListener = new Listener(this, gestureManager);
         sensorManager.registerListener(fastestListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         sounds = new Sounds();
         storage = new FileStorage(getApplicationContext());
-        gesture = new Gesture(this, storage);
+        gesture = new Gesture();
+        gestureManager = new GestureManager();
 
         // GUI kravinky
         textView = (TextView) findViewById(R.id.text_view);

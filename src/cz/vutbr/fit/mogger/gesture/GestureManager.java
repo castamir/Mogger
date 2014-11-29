@@ -2,7 +2,6 @@ package cz.vutbr.fit.mogger.gesture;
 
 import cz.vutbr.fit.mogger.DTW;
 import cz.vutbr.fit.mogger.Gesture;
-
 import java.util.ArrayList;
 
 public class GestureManager {
@@ -14,12 +13,13 @@ public class GestureManager {
         dtw = new DTW();
     }
 
-    public void addGesture(Gesture gesture) throws InvalidArgumentException {
-        for (Gesture storedGesture : gestures) {
-            if (storedGesture.name.equals(gesture.name)) {
-                throw new InvalidArgumentException("Gesture with name '" + gesture.name + "' already exists.");
-            }
-        }
+    public void addGesture(Gesture gesture) {
+// TODO - duplicated name check as soon as GUI support is available
+//        for (Gesture storedGesture : gestures) {
+//            if (storedGesture.name.equals(gesture.name)) {
+//                throw new InvalidArgumentException("Gesture with name '" + gesture.name + "' already exists.");
+//            }
+//        }
         gestures.add(gesture);
     }
 

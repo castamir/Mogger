@@ -26,11 +26,10 @@ public class Gesture {
     private int prev_x;
     private int prev_y;
     private int prev_z;
-    private MoveTriggerActivity mogger;
-    private FileStorage storage;
+//    private MoveTriggerActivity mogger;
+//    private FileStorage storage;
 
-    public Gesture(MoveTriggerActivity mogger, FileStorage storage) {
-        this.storage = storage;
+    public Gesture() {
 
         // gesto akcelerometr
         coord_x = new ArrayList<Integer>();
@@ -43,7 +42,6 @@ public class Gesture {
         prev_y = 100;
         prev_z = 100;
         sounds = new Sounds();
-        this.mogger = mogger;
     }
 
     public int size() {
@@ -107,42 +105,5 @@ public class Gesture {
         return threshold;
     }
 
-    // ulozeni noveho gesta
-    public void save(int x, int y, int z) {
-//        if (ref_coord_x.size() == 0) {
-//            // prvni inicializace
-//            if (prev_x != 100) {
-//                // uzivatel zacal vytvaret gesto
-//                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) > 1) {
-//                    ref_coord_x.add(x);
-//                    ref_coord_y.add(y);
-//                    ref_coord_z.add(z);
-//                    mogger.textView.setText("Recording ...");
-//                    sounds.PlayTone();
-//                }
-//            }
-//        } else {
-//            ref_coord_x.add(x);
-//            ref_coord_y.add(y);
-//            ref_coord_z.add(z);
-//
-//            // mame alespon 8 vektoru, zacneme overovat, zda uzivatel neukoncil gesto
-//            if (ref_coord_x.size() >= 8) {
-//                if ((abs(x - prev_x) + abs(y - prev_y) + abs(z - prev_z)) < 3) {
-//                    mogger.fastestListener.stopRecording();
-//                    sounds.PlayTone();
-//                    mogger.button2.setText("Save");
-//                    mogger.button2.setTag(1);
-//                    mogger.textView.setText("New gesture saved.");
-//                    mogger.button1.setEnabled(true);
-//                    threshold = calculateThreshold();
-//                    storage.storeGesture();
-//                }
-//            }
-//        }
-//        prev_x = x;
-//        prev_y = y;
-//        prev_z = z;
-    }
 
 }
