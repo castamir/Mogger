@@ -11,7 +11,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
-import static cz.vutbr.fit.mogger.Constants.*;
+import static cz.vutbr.fit.mogger.Constants.CHECK;
+import static cz.vutbr.fit.mogger.Constants.SAVE;
 
 
 public class MoveTriggerActivity extends Activity implements OnClickListener {
@@ -22,6 +23,7 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
     SensorManager sensorManager;
     Sensor accelerometer;
     Sounds sounds;
+    FileStorage storage;
 
     Listener fastestListener;
 
@@ -37,11 +39,11 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         fastestListener = new Listener(this);
-        sensorManager.registerListener(fastestListener, accelerometer,SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(fastestListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         sounds = new Sounds();
-
-        gesture = new Gesture(this);
+        storage = new FileStorage(getApplicationContext());
+        gesture = new Gesture(this, storage);
 
         // GUI kravinky
         textView = (TextView) findViewById(R.id.text_view);
@@ -53,13 +55,18 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
         // stavy pro buttony
         button1.setTag(1);
         button2.setTag(1);
+
+        if (storage.loadConfig()) {
+            textView.setText("Loaded");
+        } else {
+            textView.setText("Config Not Found...");
+        }
     }
 
     protected void onResume() {
         super.onResume();
 
-        sensorManager.registerListener(fastestListener, accelerometer,
-                SensorManager.SENSOR_DELAY_FASTEST);
+        sensorManager.registerListener(fastestListener, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     protected void onPause() {
@@ -69,11 +76,10 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
     }
 
     // zachyceni kliku na buttony a zavolani jejich akci
-    @Override
     public void onClick(View v) {
 
         final int id = v.getId();
-        int status = 0;
+        int status;
 
         switch (id) {
             // kontrola s ulozenym gestem
@@ -85,13 +91,12 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
                     fastestListener.startRecording();
                     button1.setTag(2);
                     this.button1.setText("Stop");
-                    textView.setText("Working...");
-                }
-                else {
+                    textView.setText("Testing...");
+                } else {
                     fastestListener.stopRecording();
                     button1.setTag(1);
                     this.button1.setText("Start");
-                    textView.setText("Mogger v 1.2");
+                    textView.setText("Mogger v 1.3");
                     button2.setEnabled(true);
                 }
                 break;
@@ -108,11 +113,10 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
                     this.button2.setText("Stop");
 
                     // promaze data stareho ulozeneho gesta
-                    gesture.clear();
+//                    gesture.clear();
 
                     // zpozdeni 2 sec pred samotnym nahravanim gesta
                     new Handler().postDelayed(new Runnable() {
-                        @Override
                         public void run() {
                             // ulozeni gesta
                             fastestListener.startRecording();
@@ -128,7 +132,6 @@ public class MoveTriggerActivity extends Activity implements OnClickListener {
     public int mogger_action() {
 
         int status1 = (Integer) button1.getTag();
-        int status2 = (Integer) button1.getTag();
 
         // porovnani gest
         if (status1 == 2) {
